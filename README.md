@@ -27,7 +27,7 @@ $ python3 posh_nursery.py
 
 Advanced options takes 2 command line arguments:
 1. Number of seconds to wait before sharing again
-2. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file.
+2. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top.
 ```
 $ python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>
 ```
