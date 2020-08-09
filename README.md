@@ -1,5 +1,5 @@
 # PoshmarkNursery
-PoshmarkNursery is a bot that shares one's own Poshmark closet to his/her followers on a schedule. <a href="https://www.poshmark.com">Poshmark</a> is an online reselling platform, and sharing one's own items helps to promote sales.
+PoshmarkNursery is a bot that shares available items from one's own Poshmark closet to his/her followers on a schedule. <a href="https://www.poshmark.com">Poshmark</a> is an online reselling platform, and sharing one's own items helps to promote sales.
 
 # Motivation
 I started reselling some of my clothes on Poshmark in the summer of 2019 and have caught the reselling/downsizing bug. To promote sales, I quickly learned that sharing my own items on a regular basis was a good practice. The act of sharing is very tedious so I wrote this script for sharing. 
