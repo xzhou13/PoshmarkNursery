@@ -338,7 +338,7 @@ if __name__ == "__main__":
       print("Usage: python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>")
    
    debug = False
-   slowMode = True
+   slowMode = False
    username = config.username
    password = config.password
    while(1):
