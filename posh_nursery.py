@@ -5,7 +5,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-import time, sys, random, datetime, pdb
+from datetime import datetime, timedelta
+import sys, random, pdb, time
 import config
    
 class Posh_Nursery:
@@ -33,6 +34,7 @@ class Posh_Nursery:
       #self.cssShareClass = "div.icon-con"
       self.shareXPath = "//i[@class='icon pm-logo-white']"
       self.modalTitleXPath = "//h5[@class='modal__title']"
+      self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
       self.availableUrl = self.getClosetAvailableUrl(self.username);
       if maintainOrder: 
          self.orderTextFile = "order.txt"
@@ -246,6 +248,12 @@ class Posh_Nursery:
          elif modalTitle == "Oh the HUMAN-ity. Check the box if you're a real person.":
             print("      Captcha detected, please solve")
             pdb.set_trace()
+            try:
+               captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
+               self.driver.execute_script("arguments[0].click();", captchaXButton)
+            except Exception as e:
+               print("      Exception occured while closing captcha pop up: " + str(e))
+               pdb.set_trace()
          else:
             print("      Modal title: " + modalTitle)
 
@@ -264,9 +272,17 @@ class Posh_Nursery:
       self.driver.execute_script("arguments[0].click();", shareToFollowers)
       if self.debug:
          print("      Clicked 2nd share")
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareToFollowers)) #wait until the share modal is gone
+      
+      shareModalIsGone = False
+      while not shareModalIsGone:
+         try:
+            shareModalIsGone = WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareToFollowers)) #wait until the share modal is gone
+         except TimeoutException as e:
+            print("Timed out while waiting for share pop up window to disappear..waiting again")
+            print(e)
+
       self.checkForCaptcha()
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='social-action-bar tile__social-actions']"))) #wait until sharing is complete
+      WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='social-action-bar tile__social-actions']"))) #wait until social button is clickable again
       
       if self.slowMode:
          time.sleep(self.getRandomSec())
@@ -282,7 +298,7 @@ class Posh_Nursery:
       if self.slowMode:
          time.sleep(3)
       
-      now = datetime.datetime.now()
+      now = datetime.now()
       print("Current date and time: " + now.strftime("%Y-%m-%d %H:%M:%S"))
       if self.orderTextFile:
          print("Sharing now...")
@@ -350,5 +366,5 @@ if __name__ == "__main__":
    
       posh_nursery.quit()   
       
-      print("Shared closet, will share again in " + str(timeToWait/60) + " mins...") 
+      print("Shared closet, will share again in " + str(timeToWait/60) + " mins at " + str(datetime.now() + timedelta(seconds=timeToWait))) 
       time.sleep(timeToWait)
