@@ -5,7 +5,7 @@ PoshmarkNursery is a bot that shares available items from one's own Poshmark clo
 I started reselling some of my clothes on Poshmark in the summer of 2019 and have caught the reselling/downsizing bug. To promote sales, I quickly learned that sharing my own items on a regular basis was a good practice. The act of sharing is very tedious so I wrote this script for sharing. 
 
 # Prerequisites
-* Python 3.4+
+* Python 3.7.3+
 * Selenium 3.141.0+
 * Chrome and compatible version of <a href="https://chromedriver.chromium.org">chromedriver</a>
 
