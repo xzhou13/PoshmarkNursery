@@ -15,7 +15,11 @@ Clone the source locally:
 $ git clone https://github.com/xzhou13/PoshmarkNursery
 ```
 
-Modify the "config.py" file to contain your Poshmark login and password. 
+Modify the "config.py" file to contain your Poshmark login and password within the "". 
+```
+username = "username"
+password = "password"
+```
 
 # To Run
 Run in terminal with the following options:
@@ -25,14 +29,14 @@ Default mode (wait one hour after sharing completes to share again, shares in th
 $ python3 posh_nursery.py
 ```
 
-Advanced options takes 2 command line arguments:
-1. Number of seconds to wait before sharing again
+Advanced option takes 2 command line arguments:
+1. Number of seconds to wait before sharing again. 
 2. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top.
 ```
 $ python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>
 ```
 
 # Maintenance
-* Captcha: This will get caught by captcha, and when that happens, the script detects it, enters into the debugger mode and waits for the user to manually solve the captcha. After solving the captcha, type 'continue' in the debugger to continue the sharing. I recommend logging into your Poshmark account on a web browser (not the selenium driven chromedriver window), and then share an item there. This will reduce the number of captchas you'll have to solve. When it gets caught in the log in screen, check "I'm not a robot" and solve the capcha in the chromedriver window.
+* Captcha: This will get caught by captcha, and when that happens, the script detects it, enters into the debugger mode and waits for the user to manually solve the captcha. After solving the captcha, type 'continue' in the debugger to continue the sharing. I recommend logging into your Poshmark account on a web browser (not the selenium driven chromedriver window), and then share an item there. This will reduce the number of captchas you'll have to solve. If you attempt to solve the captcha in the selenium driven window, you'll be prompted to solve multiple captcha. When it gets caught in the log in screen, check "I'm not a robot" and solve the capcha in the chromedriver window. In the case that it gets caught in the log in window, consider sharing less frequently.
 * chromedriver needs to be updated with the update of Chrome.
 * Poshmark UI updates sometimes requires the pathes in "posh_nursery.py" to be updated accordingly.
