@@ -68,8 +68,8 @@ class Posh_Nursery:
          except TimeoutException as e:
             timedOut = True
             print("Timed out again with username xpath")
-            print("Please manually enter username, then type 'continue'")
-            pdb.set_trace()
+            print("Please manually enter username, then type 'c' or 'continue'")
+            pdb.set_trace()   
       
       if not timedOut:
          for char in self.username:
@@ -89,7 +89,7 @@ class Posh_Nursery:
          except TimeoutException as e:
             timedOut = True
             print("Timed out again with password xpath")
-            print("Please manually enter password, then type 'continue'")
+            print("Please manually enter password, then type 'c' or 'continue'")
       
       if not timedOut:
          for char in self.password:
@@ -104,7 +104,7 @@ class Posh_Nursery:
       except:
          print("Exception occured while trying to log in, exiting.")
          self.quit()
-         self.exit()
+         sys.exit()
       
       if self.debug:  
          print(self.driver.title)
@@ -113,7 +113,7 @@ class Posh_Nursery:
          WebDriverWait(self.driver, self.timeOutSecs).until(EC.title_contains("Feed"))
       except Exception as e:
          print("ERROR: logging error{}".format(e))
-         print("Please solve captcha and then type 'continue'")
+         print("Please solve captcha and then type 'c' or 'continue'")
          pdb.set_trace()
       
       if self.debug:  
@@ -213,7 +213,7 @@ class Posh_Nursery:
       count = 0
       for button in self.orderedShareButtons:
          if button == None:
-            print(str(count) + " is None.")
+            print(str(count) + " is None. Something went wrong. Exiting")
             self.quit()
             sys.exit()
          count += 1
@@ -252,8 +252,9 @@ class Posh_Nursery:
                captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
                self.driver.execute_script("arguments[0].click();", captchaXButton)
             except Exception as e:
-               print("      Exception occured while closing captcha pop up: " + str(e))
-               pdb.set_trace()
+               print("      Exception occured while closing captcha pop up, exiting: " + str(e))
+               self.quit()
+               sys.exit()
          else:
             print("      Modal title: " + modalTitle)
 
@@ -331,8 +332,6 @@ class Posh_Nursery:
       while scroll:
          self.scrollCloset()
       
-         self.getItemNames()
-
          self.getShareButtons()
       
          print("Available items in the closet: {}".format(self.closetSize))
@@ -342,6 +341,8 @@ class Posh_Nursery:
             print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
             scroll = True
          
+      self.getItemNames()
+
       if self.orderTextFile:
          print("Keeping closet order based on " + self.orderTextFile)
          self.arrangeClosetItemsForSharing()
