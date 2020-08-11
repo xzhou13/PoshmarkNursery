@@ -13,17 +13,20 @@ class Posh_Nursery:
    def __init__(self, username, password, slowMode = False, maintainOrder = False, debug = False):
       self.username = username
       self.password = password
-      self.loginUrl = "https://poshmark.com/login"
+      self.timeOutSecs = 20
       self.chrome_options = Options()
       #self.chrome_options.add_argument("--headless")
       self.chrome_options.add_argument("--window-size=1920x1080")
       self.driver = webdriver.Chrome(options = self.chrome_options)
-      self.closetUrl = "https://poshmark.com/closet"
       self.shareButtons = []
       self.orderedShareButtons = []
       self.closetSize = 0
       self.itemNameElements = []
       self.itemNames = []
+      self.loginUrl = "https://poshmark.com/login"
+      self.closetUrl = "https://poshmark.com/closet"
+      self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
+      self.statsXPath = "//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
       self.passwordID = "login_form_password"
       self.socialXPath = "//*[@class='d--fl ai--c social-action-bar__action social-action-bar__share']"
@@ -35,7 +38,6 @@ class Posh_Nursery:
       self.shareXPath = "//i[@class='icon pm-logo-white']"
       self.modalTitleXPath = "//h5[@class='modal__title']"
       self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
-      self.availableUrl = self.getClosetAvailableUrl(self.username);
       if maintainOrder: 
          self.orderTextFile = "order.txt"
       else:
@@ -45,7 +47,7 @@ class Posh_Nursery:
       self.closetOrderDict = {}
       self.debug = debug
       self.slowMode = slowMode
-      self.timeOutSecs = 20
+      self.availableUrl = self.getClosetAvailableUrl(self.username)
    
    def getRandomSec(self):
       return random.randrange(1, 5, 1)
@@ -127,18 +129,16 @@ class Posh_Nursery:
       waitTime = waitTime
       lastHeight = self.driver.execute_script("return document.body.scrollHeight")
       scrollMore = True
-      scrollToEndCount = 0
       while scrollMore:
          print("Scrolling")
          self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-         time.sleep(waitTime)
 
          newHeight = self.driver.execute_script("return document.body.scrollHeight")
          if newHeight == lastHeight:
-            if scrollToEndCount >= 3:
-               scrollMore = False
-            scrollToEndCount += 1
+            scrollMore = False
          lastHeight = newHeight
+
+         time.sleep(waitTime)
    
    def readInClosetOrder(self):
       self.closetOrder = [line.rstrip('\n') for line in open(self.orderTextFile)]
@@ -304,26 +304,51 @@ class Posh_Nursery:
          print("Sharing now...")
          self.shareCloset(self.closetOrder, self.orderedShareButtons)
       else:
-         print("No ordered text given, sharing in order given...")
+         print("No ordered text given, sharing in current closet order...")
          self.shareCloset(self.itemNames, self.shareButtons)
-         
+   
+   def getClosetSizeFromStatsPage(self):
+      self.driver.get(self.closetStatsUrl)
+      availableStats = None
+      while not availableStats:
+         try:
+            availableStats = WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, self.statsXPath))).text
+         except TimeoutException as e:
+            print("Timed out waiting for availabe stats to load, trying again")
+      if self.debug:
+         print("Available items from stats = " + str(availableStats))
+      
+      return int(availableStats)
+      
+       
    def shareMyCloset(self):
+      
+      closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
+      
       self.driver.get(self.availableUrl)
       
-      self.scrollCloset()
+      scroll = True
+      while scroll:
+         self.scrollCloset()
       
-      self.getItemNames()
+         self.getItemNames()
 
-      self.getShareButtons()
+         self.getShareButtons()
       
+         print("Available items in the closet: {}".format(self.closetSize))
+         if closetSizeFromStatsPage == self.closetSize:
+            scroll = False
+         else:
+            print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
+            scroll = True
+         
       if self.orderTextFile:
          print("Keeping closet order based on " + self.orderTextFile)
          self.arrangeClosetItemsForSharing()
       
-      print("Available items in the closet: {}".format(self.closetSize))
-      
       self.shareAllItems()
-   
+      
+
    def quit(self):   
       self.driver.quit()
       
@@ -359,12 +384,15 @@ if __name__ == "__main__":
    password = config.password
    while(1):
       posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, debug)
+      
       print("Logging in Poshmark as " + username + "...")
       posh_nursery.login()
       
       posh_nursery.shareMyCloset()
    
       posh_nursery.quit()   
-      
       print("Shared closet, will share again in " + str(timeToWait/60) + " mins at " + str(datetime.now() + timedelta(seconds=timeToWait))) 
+      
       time.sleep(timeToWait)
+
+
