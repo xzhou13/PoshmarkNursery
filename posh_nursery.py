@@ -234,6 +234,13 @@ class Posh_Nursery:
       self.shareButtons = self.driver.find_elements_by_xpath(self.socialXPath)      
       self.closetSize = len(self.shareButtons)
   
+   def clickAButton(self, button):
+      try:
+         self.driver.execute_script("arguments[0].click();", button)
+      except Exception as e:
+         print(e)
+         pdb.set_trace()
+
    def checkForCaptcha(self): 
       modalTitle = ""
       try:
@@ -247,42 +254,60 @@ class Posh_Nursery:
                print("      No captcha")
          elif modalTitle == "Oh the HUMAN-ity. Check the box if you're a real person.":
             print("      Captcha detected, please solve")
-            pdb.set_trace()
-            try:
-               captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
-               self.driver.execute_script("arguments[0].click();", captchaXButton)
-            except Exception as e:
-               print("      Exception occured while closing captcha pop up, exiting: " + str(e))
-               self.quit()
-               sys.exit()
+            return True
          else:
             print("      Modal title: " + modalTitle)
+      
+      return False
+   
+   def waitTillModalPopsUp(self, xpath):
+      WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, xpath)))
 
    def clickFirstShareButton(self, shareButton):
-      self.driver.execute_script("arguments[0].click();", shareButton)
+      self.clickAButton(shareButton)
       if self.debug:
          print("      Clicked 1st share")
-      # wait until modal pops up
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, self.modalTitleXPath)))
-      self.checkForCaptcha()
+      self.waitTillModalPopsUp(self.modalTitleXPath)
       if self.slowMode:
          time.sleep(self.getRandomSec())
    
-   def clickSecondShareButton(self):
-      shareToFollowers = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, self.shareXPath)))
-      self.driver.execute_script("arguments[0].click();", shareToFollowers)
-      if self.debug:
-         print("      Clicked 2nd share")
-      
+   def waitTillShareModalIsGone(self, shareModal):
       shareModalIsGone = False
       while not shareModalIsGone:
          try:
-            shareModalIsGone = WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareToFollowers)) #wait until the share modal is gone
+            shareModalIsGone = WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareModal)) #wait until the share modal is gone
          except TimeoutException as e:
             print("Timed out while waiting for share pop up window to disappear..waiting again")
             print(e)
+   
+   def closeCaptchaPopUp(self):
+      try:
+         captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
+         self.clickAButton(captchaXButton)
+      except Exception as e:
+         print("      Exception occured while closing captcha pop up, exiting: " + str(e))
+         self.quit()
+         sys.exit()
+  
+   def retrySharingAnItem(self, firstShareButton):
+      self.closeCaptchaPopUp()
+      self.clickFirstShareButton(firstShareButton)
+      shareToFollowers = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, self.shareXPath)))
+      self.clickAButton(shareToFollowers)
+      self.waitTillShareModalIsGone(shareToFollowers)
+   
+   def clickSecondShareButton(self, firstShareButton):
+      shareToFollowers = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, self.shareXPath)))
+      self.clickAButton(shareToFollowers)
+      if self.debug:
+         print("      Clicked 2nd share")
+      
+      self.waitTillShareModalIsGone(shareToFollowers)
 
-      self.checkForCaptcha()
+      if self.checkForCaptcha():
+         pdb.set_trace()   
+         self.retrySharingAnItem(firstShareButton)
+ 
       WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='social-action-bar tile__social-actions']"))) #wait until social button is clickable again
       
       if self.slowMode:
@@ -293,7 +318,7 @@ class Posh_Nursery:
          if self.debug:
             print("   Sharing " + itemName)
          self.clickFirstShareButton(shareButton) 
-         self.clickSecondShareButton()
+         self.clickSecondShareButton(shareButton)
    
    def shareAllItems(self):
       if self.slowMode:
@@ -364,7 +389,7 @@ if __name__ == "__main__":
       try:
          timeToWait = int(sys.argv[1])
       except ValueError as e:
-         print("Usage: python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>")
+         print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
          sys.exit()
           
       if sys.argv[2].lower() in ('y', 'yes', 't', 'true', '1'):
@@ -373,11 +398,11 @@ if __name__ == "__main__":
          maintainOrderBasedOnOrderFile = False
       else:
          print(sys.argv[2] + " is not right")
-         print("Usage: python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>")
+         print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
          sys.exit()
    
    else:
-      print("Usage: python3 posh_nursery.py <integerNumberOfSeconds> <Y/N>")
+      print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
    
    debug = False
    slowMode = False
