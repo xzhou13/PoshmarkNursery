@@ -12,7 +12,7 @@ I started reselling some of my clothes on Poshmark in the summer of 2019 and hav
 # Setup
 Clone the source locally:
 ```
-$ git clone https://github.com/xzhou13/PoshmarkNursery
+git clone https://github.com/xzhou13/PoshmarkNursery
 ```
 
 Modify the "config.py" file to contain your Poshmark login and password within the "". 
@@ -26,14 +26,14 @@ Run in terminal with the following options:
 
 Default mode (wait one hour after sharing completes to share again, shares in the same order as current closet):
 ```
-$ python posh_nursery.py
+python posh_nursery.py
 ```
 
 Advanced option takes 2 command line arguments:
 1. Number of seconds to wait before sharing again. 
 2. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file.
 ```
-$ python posh_nursery.py <integerNumberOfSeconds> <Y/N>
+python posh_nursery.py <integerNumberOfSeconds> <Y/N>
 ```
 
 # Maintenance
