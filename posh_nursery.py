@@ -29,15 +29,20 @@ class Posh_Nursery:
       self.statsXPath = "//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
       self.passwordID = "login_form_password"
-      self.socialXPath = "//*[@class='d--fl ai--c social-action-bar__action social-action-bar__share']"
-      #self.socialXPath = "//*[@class='share']"
-      self.itemNameXPath = "//*[@class='tile__title tc--b']"
-      #self.itemNameXPath = "//*[@class='title']"
-      self.cssShareClass = "div.share-wrapper__icon-container"
-      #self.cssShareClass = "div.icon-con"
+      #self.socialBarXPath = "social-action-bar tile__social-actions"
+      self.socialBarXPath = "social-info social-actions d-fl ai-c jc-c"
+      #self.socialXPath = "//*[@class='d--fl ai--c social-action-bar__action social-action-bar__share']"
+      self.socialXPath = "//*[@class='share']"
+      #self.itemNameXPath = "//*[@class='tile__title tc--b']"
+      self.itemNameXPath = "//*[@class='title']"
+      #self.cssShareClass = "div.share-wrapper__icon-container"
+      self.cssShareClass = "div.icon-con"
       self.shareXPath = "//i[@class='icon pm-logo-white']"
-      self.modalTitleXPath = "//h5[@class='modal__title']"
-      self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
+      #self.modalTitleXPath = "//h5[@class='modal__title']"
+      self.captchaModalTitleXPath = "//*[@id='captcha-popup']/div[1]/h5"
+      self.shareModalTitleXPath = "//*[@id='share-popup']/div[1]/h5"
+      #self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
+      self.captchaXButtonXPath = "//*[@id='captcha-popup']/div[1]/button"
       if maintainOrder: 
          self.orderTextFile = "order.txt"
       else:
@@ -241,10 +246,10 @@ class Posh_Nursery:
          print(e)
          pdb.set_trace()
 
-   def checkForCaptcha(self): 
+   def checkForCaptcha(self, modalTitleXPath): 
       modalTitle = ""
       try:
-         modalTitle = self.driver.find_element_by_xpath(self.modalTitleXPath).text
+         modalTitle = self.driver.find_element_by_xpath(modalTitleXPath).text
       except Exception as e:
          if self.debug:
             print("      No modal, no captcha")
@@ -267,7 +272,7 @@ class Posh_Nursery:
       self.clickAButton(shareButton)
       if self.debug:
          print("      Clicked 1st share")
-      self.waitTillModalPopsUp(self.modalTitleXPath)
+      self.waitTillModalPopsUp(self.shareModalTitleXPath)
       if self.slowMode:
          time.sleep(self.getRandomSec())
    
@@ -286,9 +291,7 @@ class Posh_Nursery:
          self.clickAButton(captchaXButton)
       except Exception as e:
          print("      Exception occured while closing captcha pop up, exiting: " + str(e))
-         self.quit()
-         sys.exit()
-  
+ 
    def retrySharingAnItem(self, firstShareButton):
       self.closeCaptchaPopUp()
       self.clickFirstShareButton(firstShareButton)
@@ -303,12 +306,12 @@ class Posh_Nursery:
          print("      Clicked 2nd share")
       
       self.waitTillShareModalIsGone(shareToFollowers)
-
-      if self.checkForCaptcha():
-         pdb.set_trace()   
+      
+      if self.checkForCaptcha(self.captchaModalTitleXPath):
+         pdb.set_trace()
          self.retrySharingAnItem(firstShareButton)
  
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='social-action-bar tile__social-actions']"))) #wait until social button is clickable again
+      WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='" + self.socialBarXPath + "']"))) #wait until social button is clickable again
       
       if self.slowMode:
          time.sleep(self.getRandomSec())
