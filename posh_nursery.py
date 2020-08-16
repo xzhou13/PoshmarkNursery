@@ -16,7 +16,7 @@ class Posh_Nursery:
       self.timeOutSecs = 20
       self.chrome_options = Options()
       #self.chrome_options.add_argument("--headless")
-      self.chrome_options.add_argument("--window-size=1920x1080")
+      #self.chrome_options.add_argument("--window-size=1920x1080")
       self.driver = webdriver.Chrome(options = self.chrome_options)
       self.shareButtons = []
       self.orderedShareButtons = []
@@ -28,9 +28,11 @@ class Posh_Nursery:
       self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
       self.statsXPath = "//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
+      self.loginXPath = "//input[@name='userHandle']"
       self.passwordID = "login_form_password"
+      self.passwordXPath = "//input[@name='password']"
       #self.socialBarXPath = "social-action-bar tile__social-actions"
-      self.socialBarXPath = "social-info social-actions d-fl ai-c jc-c"
+      self.socialBarXPath = "//div[@class='social-info social-actions d-fl ai-c jc-c']"
       #self.socialXPath = "//*[@class='d--fl ai--c social-action-bar__action social-action-bar__share']"
       self.socialXPath = "//*[@class='share']"
       #self.itemNameXPath = "//*[@class='tile__title tc--b']"
@@ -53,64 +55,72 @@ class Posh_Nursery:
       self.debug = debug
       self.slowMode = slowMode
       self.availableUrl = self.getClosetAvailableUrl(self.username)
+      self.driver.minimize_window()
    
    def getRandomSec(self):
       return random.randrange(1, 5, 1)
+   
+   def waitTillClickable(self, findByIdOrPath, idOrPath):
+      if findByIdOrPath == 'id':
+         try:
+            clickableElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.ID, idOrPath)))
+         except TimeoutException as e:
+            print("Time out at locating username with " + findByIdOrPath + ": " + str(e))
+      else:
+         try:
+            clickableElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, idOrPath)))
+         except TimeoutException as e:
+            print("Time out at locating username with " + findByIdOrPath + ": " + str(e))
+      return clickableElement
 
+   def waitForAnElementByXPath(self, xpath, elementName):
+      try:
+         element = WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, xpath)))
+      except TimeoutException as e:
+         print("timed out while waiting for " + elementName + " to pop up..waiting again")
+         print(e)
+      return element
+
+   def getElement(self, elementID, elementXPath):
+      element = self.waitTillClickable("id", elementID)
+      if not element:
+         print("Time out at locating ID: " + str(e))
+         element = self.waitTillClickable("xpath", elementXPath)
+         if not element:
+            print("Timed out again with xpath")
+            print("Please manually enter username/password, then type 'c' or 'continue'")
+            pdb.set_trace()
+      return element   
+             
+   def enterTxtSlowly(self, element, text):
+      for char in text:
+         element.send_keys(char)
+         time.sleep(random.random())
+
+   def enterUserName(self):
+      userNameElement = self.getElement(self.loginID, self.loginXPath)
+      if not userNameElement:
+         print("Username element not obtained from page, exiting...")
+         self.quit()
+         sys.exit() 
+      self.enterTxtSlowly(userNameElement, self.username)
+   
+   def enterAndSubmitPassword(self):
+      passwordElement = self.getElement(self.passwordID, self.passwordXPath)
+      if not passwordElement:
+         print("Password element not obtained from page, exiting...")
+         self.quit()
+         sys.exit()
+      self.enterTxtSlowly(passwordElement, self.password)
+      passwordElement.submit()
+             
    def login(self): 
       self.driver.get(self.loginUrl)
       
-      if self.slowMode:
-         time.sleep(5)
-       
-      timedOut = False
-      try:
-         userNameElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.ID, self.loginID)))
-      except TimeoutException as e:
-         print("Time out at locating username with ID: " + str(e))
-         try:
-            userNameElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='userHandle']")))
-         except TimeoutException as e:
-            timedOut = True
-            print("Timed out again with username xpath")
-            print("Please manually enter username, then type 'c' or 'continue'")
-            pdb.set_trace()   
-      
-      if not timedOut:
-         for char in self.username:
-            userNameElement.send_keys(char)
-            time.sleep(random.random())
-       
-      if self.slowMode:
-         time.sleep(self.getRandomSec())
+      self.enterUserName()
 
-      timedOut = False
-      try:
-         passwordElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.ID, self.passwordID)))
-      except TimeoutException as e:
-         print("Timed out at locating password with ID: " + str(e))
-         try:
-            passwordElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//input[@name='password']")))
-         except TimeoutException as e:
-            timedOut = True
-            print("Timed out again with password xpath")
-            print("Please manually enter password, then type 'c' or 'continue'")
-      
-      if not timedOut:
-         for char in self.password:
-            passwordElement.send_keys(char)
-            time.sleep(random.random())
-      
-      if self.slowMode:
-         time.sleep(self.getRandomSec())
+      self.enterAndSubmitPassword()
 
-      try:
-         passwordElement.submit()
-      except:
-         print("Exception occured while trying to log in, exiting.")
-         self.quit()
-         sys.exit()
-      
       if self.debug:  
          print(self.driver.title)
       
@@ -119,32 +129,30 @@ class Posh_Nursery:
       except Exception as e:
          print("ERROR: logging error{}".format(e))
          print("Please solve captcha and then type 'c' or 'continue'")
+         self.driver.switch_to.window(self.driver.current_window_handle) 
          pdb.set_trace()
-      
-      if self.debug:  
-         print(self.driver.title)
+         self.driver.minimize_window()
       
       print("Logged into poshmark")
 
    def getClosetAvailableUrl(self, username):   
       availableUrl = "{}/{}{}".format(self.closetUrl, username, "?availability=available")
       return availableUrl 
-  
-   def scrollCloset(self, waitTime = 10):
+   
+   def scrollCloset(self, waitTime = 2):
       waitTime = waitTime
       lastHeight = self.driver.execute_script("return document.body.scrollHeight")
       scrollMore = True
+      print("Scrolling")
       while scrollMore:
-         print("Scrolling")
+         self.driver.switch_to.window(self.driver.current_window_handle) 
          self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
+         time.sleep(waitTime)
          newHeight = self.driver.execute_script("return document.body.scrollHeight")
          if newHeight == lastHeight:
             scrollMore = False
          lastHeight = newHeight
-
-         time.sleep(waitTime)
-   
+         
    def readInClosetOrder(self):
       self.closetOrder = [line.rstrip('\n') for line in open(self.orderTextFile)]
       for n,sortedItem in enumerate(self.closetOrder):
@@ -243,10 +251,10 @@ class Posh_Nursery:
       try:
          self.driver.execute_script("arguments[0].click();", button)
       except Exception as e:
-         print(e)
-         pdb.set_trace()
+         print("clicking button failed: " + str(e))
+         #pdb.set_trace()
 
-   def checkForCaptcha(self, modalTitleXPath): 
+   def checkForCaptcha(self, modalTitleXPath):
       modalTitle = ""
       try:
          modalTitle = self.driver.find_element_by_xpath(modalTitleXPath).text
@@ -266,7 +274,9 @@ class Posh_Nursery:
       return False
    
    def waitTillModalPopsUp(self, xpath):
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, xpath)))
+      modalPopsUp = False
+      while not modalPopsUp:
+         modalPopsUp = self.waitForAnElementByXPath(xpath, "modal")
 
    def clickFirstShareButton(self, shareButton):
       self.clickAButton(shareButton)
@@ -295,23 +305,37 @@ class Posh_Nursery:
    def retrySharingAnItem(self, firstShareButton):
       self.closeCaptchaPopUp()
       self.clickFirstShareButton(firstShareButton)
-      shareToFollowers = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, self.shareXPath)))
+      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
       self.clickAButton(shareToFollowers)
       self.waitTillShareModalIsGone(shareToFollowers)
    
+   def checkAndWaitForCaptchaSolve(self, firstShareButton):
+      if self.checkForCaptcha(self.captchaModalTitleXPath):
+         self.driver.switch_to.window(self.driver.current_window_handle) 
+         pdb.set_trace()
+         self.driver.minimize_window()
+         self.retrySharingAnItem(firstShareButton)
+      else:
+         if self.debug:
+            print("No captcha")
+   
    def clickSecondShareButton(self, firstShareButton):
-      shareToFollowers = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, self.shareXPath)))
+      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
+      if not shareToFollowers:
+         print("time out exception occured clicking second share button: " + str(e))
+         #pdb.set_trace()
+
       self.clickAButton(shareToFollowers)
       if self.debug:
          print("      Clicked 2nd share")
       
       self.waitTillShareModalIsGone(shareToFollowers)
       
-      if self.checkForCaptcha(self.captchaModalTitleXPath):
-         pdb.set_trace()
-         self.retrySharingAnItem(firstShareButton)
- 
-      WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, "//div[@class='" + self.socialBarXPath + "']"))) #wait until social button is clickable again
+      self.checkAndWaitForCaptchaSolve(firstShareButton)
+      
+      if not self.waitTillClickable("xpath", self.socialBarXPath):
+         print("time out exception occured, recheck captcha" + str(e)) 
+         self.checkAndWaitForCaptchaSolve(firstShareButton)     
       
       if self.slowMode:
          time.sleep(self.getRandomSec())
@@ -324,6 +348,7 @@ class Posh_Nursery:
          self.clickSecondShareButton(shareButton)
    
    def shareAllItems(self):
+      self.driver.minimize_window()
       if self.slowMode:
          time.sleep(3)
       
@@ -340,10 +365,7 @@ class Posh_Nursery:
       self.driver.get(self.closetStatsUrl)
       availableStats = None
       while not availableStats:
-         try:
-            availableStats = WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, self.statsXPath))).text
-         except TimeoutException as e:
-            print("Timed out waiting for availabe stats to load, trying again")
+         availableStats = self.waitForAnElementByXPath(self.statsXPath, "available stats").text
       if self.debug:
          print("Available items from stats = " + str(availableStats))
       
@@ -363,7 +385,7 @@ class Posh_Nursery:
          self.getShareButtons()
       
          print("Available items in the closet: {}".format(self.closetSize))
-         if closetSizeFromStatsPage == self.closetSize:
+         if closetSizeFromStatsPage <= self.closetSize:
             scroll = False
          else:
             print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
