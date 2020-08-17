@@ -61,6 +61,7 @@ class Posh_Nursery:
       return random.randrange(1, 5, 1)
    
    def waitTillClickable(self, findByIdOrPath, idOrPath):
+      clickableElement = False
       if findByIdOrPath == 'id':
          try:
             clickableElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.ID, idOrPath)))
@@ -333,8 +334,8 @@ class Posh_Nursery:
       
       self.checkAndWaitForCaptchaSolve(firstShareButton)
       
-      if not self.waitTillClickable("xpath", self.socialBarXPath):
-         print("time out exception occured, recheck captcha" + str(e)) 
+      while not self.waitTillClickable("xpath", self.socialBarXPath):
+         print("time out exception occured, recheck captcha") 
          self.checkAndWaitForCaptchaSolve(firstShareButton)     
       
       if self.slowMode:
