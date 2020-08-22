@@ -25,8 +25,6 @@ class Posh_Nursery:
       self.itemNames = []
       self.loginUrl = "https://poshmark.com/login"
       self.closetUrl = "https://poshmark.com/closet"
-      self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
-      self.statsXPath = "//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
       self.loginXPath = "//input[@name='userHandle']"
       self.passwordID = "login_form_password"
@@ -57,57 +55,63 @@ class Posh_Nursery:
       self.availableUrl = self.getClosetAvailableUrl(self.username)
       self.driver.minimize_window()
    
+   def quit(self):   
+      self.driver.quit()
+   
    def getRandomSec(self):
       return random.randrange(1, 5, 1)
-   
+
    def waitTillClickable(self, findByIdOrPath, idOrPath):
       clickableElement = False
       if findByIdOrPath == 'id':
          try:
             clickableElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.ID, idOrPath)))
          except TimeoutException as e:
-            print("Time out at locating username with " + findByIdOrPath + ": " + str(e))
+            print("Timed out at locating element by " + findByIdOrPath + " at " + str(idOrPath) + ": " + str(e))
+            return False
       else:
          try:
             clickableElement = WebDriverWait(self.driver, self.timeOutSecs).until(EC.element_to_be_clickable((By.XPATH, idOrPath)))
          except TimeoutException as e:
-            print("Time out at locating username with " + findByIdOrPath + ": " + str(e))
+            print("Timed out at locating element by " + findByIdOrPath + " at " + str(idOrPath) + ": " + str(e))
+            return False
       return clickableElement
 
    def waitForAnElementByXPath(self, xpath, elementName):
       try:
          element = WebDriverWait(self.driver, self.timeOutSecs).until(EC.presence_of_element_located((By.XPATH, xpath)))
       except TimeoutException as e:
-         print("timed out while waiting for " + elementName + " to pop up..waiting again")
+         print("Timed out while waiting for " + elementName + " to pop up..waiting again")
          print(e)
+         return False
       return element
 
-   def getElement(self, elementID, elementXPath):
+   def getLogInElement(self, elementID, elementXPath):
       element = self.waitTillClickable("id", elementID)
       if not element:
-         print("Time out at locating ID: " + str(e))
+         print("Time out at locating ID: " + elementID)
          element = self.waitTillClickable("xpath", elementXPath)
          if not element:
             print("Timed out again with xpath")
             print("Please manually enter username/password, then type 'c' or 'continue'")
             pdb.set_trace()
       return element   
-             
+
    def enterTxtSlowly(self, element, text):
       for char in text:
          element.send_keys(char)
          time.sleep(random.random())
 
    def enterUserName(self):
-      userNameElement = self.getElement(self.loginID, self.loginXPath)
+      userNameElement = self.getLogInElement(self.loginID, self.loginXPath)
       if not userNameElement:
          print("Username element not obtained from page, exiting...")
          self.quit()
          sys.exit() 
       self.enterTxtSlowly(userNameElement, self.username)
-   
+
    def enterAndSubmitPassword(self):
-      passwordElement = self.getElement(self.passwordID, self.passwordXPath)
+      passwordElement = self.getLogInElement(self.passwordID, self.passwordXPath)
       if not passwordElement:
          print("Password element not obtained from page, exiting...")
          self.quit()
@@ -116,15 +120,11 @@ class Posh_Nursery:
       passwordElement.submit()
              
    def login(self): 
-      self.driver.get(self.loginUrl)
-      
+      self.driver.get(self.loginUrl)      
       self.enterUserName()
-
       self.enterAndSubmitPassword()
-
       if self.debug:  
          print(self.driver.title)
-      
       try:
          WebDriverWait(self.driver, self.timeOutSecs).until(EC.title_contains("Feed"))
       except Exception as e:
@@ -133,13 +133,12 @@ class Posh_Nursery:
          self.driver.switch_to.window(self.driver.current_window_handle) 
          pdb.set_trace()
          self.driver.minimize_window()
-      
       print("Logged into poshmark")
 
    def getClosetAvailableUrl(self, username):   
       availableUrl = "{}/{}{}".format(self.closetUrl, username, "?availability=available")
       return availableUrl 
-   
+
    def scrollCloset(self, waitTime = 2):
       waitTime = waitTime
       lastHeight = self.driver.execute_script("return document.body.scrollHeight")
@@ -205,25 +204,20 @@ class Posh_Nursery:
                      f.write(line)
  
    def arrangeClosetItemsForSharing(self):
-      self.readInClosetOrder()
-      
+      self.readInClosetOrder()      
       self.updateOrderFile() 
-      
       if self.hasUpdate:
          self.closetOrderDict = {}
          self.readInClosetOrder()
          print("Updated order.txt")
-
       if self.debug: 
          print(self.closetOrderDict)
-
       self.orderedShareButtons = [None] * self.closetSize
       for itemName, item in zip(self.itemNames, self.shareButtons):
          if self.debug:
             print(itemName)
             print(self.closetOrderDict[itemName])
          self.orderedShareButtons[self.closetOrderDict[itemName]] = item
-      
       count = 0
       for button in self.orderedShareButtons:
          if button == None:
@@ -231,7 +225,6 @@ class Posh_Nursery:
             self.quit()
             sys.exit()
          count += 1
-          
 
    def getAndPrintItemNames(self):
       for count, itemName in enumerate(self.itemNameElements):
@@ -254,7 +247,51 @@ class Posh_Nursery:
       except Exception as e:
          print("clicking button failed: " + str(e))
          #pdb.set_trace()
+   
+   def waitTillModalPopsUp(self, xpath):
+      modalPopsUp = False
+      while not modalPopsUp:
+         modalPopsUp = self.waitForAnElementByXPath(xpath, "modal")
+         print("modal didn't pop up, waiting again")
+      print("modal popped up")
 
+   def clickFirstShareButton(self, shareButton):
+      self.clickAButton(shareButton)
+      if self.debug:
+         print("      Clicked 1st share")
+      #self.waitTillModalPopsUp(self.shareModalTitleXPath)
+      self.waitTillClickable("xpath", self.shareXPath)
+      if self.slowMode:
+         time.sleep(self.getRandomSec())
+   
+   def waitTillShareModalIsGone(self, shareModal):
+      try:
+         shareModalIsGone = WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareModal)) #wait until the share modal is gone
+      except TimeoutException as e:
+         print("Timed out while waiting for share modal to disappear..clicking second share again")
+         print(e)
+         return False
+      return True
+   
+   def closeCaptchaPopUp(self):
+      try:
+         captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
+         self.clickAButton(captchaXButton)
+      except Exception as e:
+         print("      Exception occured while closing captcha pop up, exiting: " + str(e))
+
+   def retrySharingAnItem(self, firstShareButton):
+      self.closeCaptchaPopUp()
+      self.clickFirstShareButton(firstShareButton)
+      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
+      shared = False
+      while not shared:
+         self.clickAButton(shareToFollowers)
+         if self.debug:
+            print("     Retrying sharing an item before captcha")
+         if self.waitTillShareModalIsGone(shareToFollowers):
+            shared = True
+   
    def checkForCaptcha(self, modalTitleXPath):
       modalTitle = ""
       try:
@@ -270,45 +307,8 @@ class Posh_Nursery:
             print("      Captcha detected, please solve")
             return True
          else:
-            print("      Modal title: " + modalTitle)
-      
+            print("      Modal title: " + modalTitle)      
       return False
-   
-   def waitTillModalPopsUp(self, xpath):
-      modalPopsUp = False
-      while not modalPopsUp:
-         modalPopsUp = self.waitForAnElementByXPath(xpath, "modal")
-
-   def clickFirstShareButton(self, shareButton):
-      self.clickAButton(shareButton)
-      if self.debug:
-         print("      Clicked 1st share")
-      self.waitTillModalPopsUp(self.shareModalTitleXPath)
-      if self.slowMode:
-         time.sleep(self.getRandomSec())
-   
-   def waitTillShareModalIsGone(self, shareModal):
-      shareModalIsGone = False
-      while not shareModalIsGone:
-         try:
-            shareModalIsGone = WebDriverWait(self.driver, self.timeOutSecs).until(EC.invisibility_of_element_located(shareModal)) #wait until the share modal is gone
-         except TimeoutException as e:
-            print("Timed out while waiting for share pop up window to disappear..waiting again")
-            print(e)
-   
-   def closeCaptchaPopUp(self):
-      try:
-         captchaXButton = self.driver.find_element_by_xpath(self.captchaXButtonXPath)
-         self.clickAButton(captchaXButton)
-      except Exception as e:
-         print("      Exception occured while closing captcha pop up, exiting: " + str(e))
- 
-   def retrySharingAnItem(self, firstShareButton):
-      self.closeCaptchaPopUp()
-      self.clickFirstShareButton(firstShareButton)
-      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
-      self.clickAButton(shareToFollowers)
-      self.waitTillShareModalIsGone(shareToFollowers)
    
    def checkAndWaitForCaptchaSolve(self, firstShareButton):
       if self.checkForCaptcha(self.captchaModalTitleXPath):
@@ -316,21 +316,20 @@ class Posh_Nursery:
          pdb.set_trace()
          self.driver.minimize_window()
          self.retrySharingAnItem(firstShareButton)
-      else:
-         if self.debug:
-            print("No captcha")
-   
+         self.checkAndWaitForCaptchaSolve(firstShareButton)
+
    def clickSecondShareButton(self, firstShareButton):
       shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
       if not shareToFollowers:
-         print("time out exception occured clicking second share button: " + str(e))
-         #pdb.set_trace()
-
-      self.clickAButton(shareToFollowers)
-      if self.debug:
-         print("      Clicked 2nd share")
-      
-      self.waitTillShareModalIsGone(shareToFollowers)
+         print("time out exception occured clicking second share button")
+         pdb.set_trace()
+      shared = False
+      while not shared:
+         self.clickAButton(shareToFollowers)
+         if self.debug:
+            print("      Clicked 2nd share")
+         if self.waitTillShareModalIsGone(shareToFollowers):
+            shared = True
       
       self.checkAndWaitForCaptchaSolve(firstShareButton)
       
@@ -351,8 +350,7 @@ class Posh_Nursery:
    def shareAllItems(self):
       self.driver.minimize_window()
       if self.slowMode:
-         time.sleep(3)
-      
+         time.sleep(3)    
       now = datetime.now()
       print("Current date and time: " + now.strftime("%Y-%m-%d %H:%M:%S"))
       if self.orderTextFile:
@@ -362,62 +360,28 @@ class Posh_Nursery:
          print("No ordered text given, sharing in current closet order...")
          self.shareCloset(self.itemNames, self.shareButtons)
    
-   def getClosetSizeFromStatsPage(self):
-      self.driver.get(self.closetStatsUrl)
-      availableStats = None
-      while not availableStats:
-         availableStats = self.waitForAnElementByXPath(self.statsXPath, "available stats").text
-      if self.debug:
-         print("Available items from stats = " + str(availableStats))
-      
-      return int(availableStats)
-      
-       
    def shareMyCloset(self):
-      
-      closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
-      
       self.driver.get(self.availableUrl)
-      
-      scroll = True
-      while scroll:
-         self.scrollCloset()
-      
-         self.getShareButtons()
-      
-         print("Available items in the closet: {}".format(self.closetSize))
-         if closetSizeFromStatsPage <= self.closetSize:
-            scroll = False
-         else:
-            print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
-            scroll = True
-         
+      self.scrollCloset()
+      self.getShareButtons()
+      print("Available items in the closet: {}".format(self.closetSize))
       self.getItemNames()
-
       if self.orderTextFile:
          print("Keeping closet order based on " + self.orderTextFile)
          self.arrangeClosetItemsForSharing()
-      
       self.shareAllItems()
       
-
-   def quit(self):   
-      self.driver.quit()
-      
 if __name__ == "__main__":
-  
    totNumArgs = len(sys.argv)
    if totNumArgs <= 1:
       timeToWait = 3600 # default wait time is 1 hr
       maintainOrderBasedOnOrderFile = False
-   
    elif totNumArgs == 3:
       try:
          timeToWait = int(sys.argv[1])
       except ValueError as e:
          print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
          sys.exit()
-          
       if sys.argv[2].lower() in ('y', 'yes', 't', 'true', '1'):
          maintainOrderBasedOnOrderFile = True
       elif sys.argv[2].lower() in ('n', 'no', 'f', 'false', '0'):
@@ -426,7 +390,6 @@ if __name__ == "__main__":
          print(sys.argv[2] + " is not right")
          print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
          sys.exit()
-   
    else:
       print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
    
@@ -436,15 +399,9 @@ if __name__ == "__main__":
    password = config.password
    while(1):
       posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, debug)
-      
       print("Logging in Poshmark as " + username + "...")
       posh_nursery.login()
-      
       posh_nursery.shareMyCloset()
-   
       posh_nursery.quit()   
       print("Shared closet, will share again in " + str(timeToWait/60) + " mins at " + str(datetime.now() + timedelta(seconds=timeToWait))) 
-      
       time.sleep(timeToWait)
-
-
