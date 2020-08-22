@@ -10,7 +10,7 @@ import sys, random, pdb, time
 import config
    
 class Posh_Nursery:
-   def __init__(self, username, password, slowMode = False, maintainOrder = False, debug = False):
+   def __init__(self, username, password, slowMode = False, maintainOrder = False, checkCaptcha = True, debug = False):
       self.username = username
       self.password = password
       self.timeOutSecs = 20
@@ -50,6 +50,7 @@ class Posh_Nursery:
       self.hasUpdate = False
       self.closetOrder = []
       self.closetOrderDict = {}
+      self.checkCaptcha = checkCaptcha
       self.debug = debug
       self.slowMode = slowMode
       self.availableUrl = self.getClosetAvailableUrl(self.username)
@@ -252,14 +253,12 @@ class Posh_Nursery:
       modalPopsUp = False
       while not modalPopsUp:
          modalPopsUp = self.waitForAnElementByXPath(xpath, "modal")
-         print("modal didn't pop up, waiting again")
-      print("modal popped up")
 
    def clickFirstShareButton(self, shareButton):
       self.clickAButton(shareButton)
       if self.debug:
          print("      Clicked 1st share")
-      #self.waitTillModalPopsUp(self.shareModalTitleXPath)
+      self.waitTillModalPopsUp(self.shareModalTitleXPath)
       self.waitTillClickable("xpath", self.shareXPath)
       if self.slowMode:
          time.sleep(self.getRandomSec())
@@ -330,12 +329,11 @@ class Posh_Nursery:
             print("      Clicked 2nd share")
          if self.waitTillShareModalIsGone(shareToFollowers):
             shared = True
+
+      if self.checkCaptcha: 
+         self.checkAndWaitForCaptchaSolve(firstShareButton)
       
-      self.checkAndWaitForCaptchaSolve(firstShareButton)
-      
-      while not self.waitTillClickable("xpath", self.socialBarXPath):
-         print("time out exception occured, recheck captcha") 
-         self.checkAndWaitForCaptchaSolve(firstShareButton)     
+      self.waitTillClickable("xpath", self.socialBarXPath)
       
       if self.slowMode:
          time.sleep(self.getRandomSec())
@@ -370,35 +368,50 @@ class Posh_Nursery:
          print("Keeping closet order based on " + self.orderTextFile)
          self.arrangeClosetItemsForSharing()
       self.shareAllItems()
-      
+
+def checkBooleanInput(val):
+   if val in ('y', 'yes', 't', 'true', '1'):
+      return True, True
+   elif val in ('n', 'no', 'f', 'false', '0'):
+      return True, False
+   else:
+      return False, False
+
 if __name__ == "__main__":
    totNumArgs = len(sys.argv)
-   if totNumArgs <= 1:
-      timeToWait = 3600 # default wait time is 1 hr
-      maintainOrderBasedOnOrderFile = False
-   elif totNumArgs == 3:
-      try:
-         timeToWait = int(sys.argv[1])
-      except ValueError as e:
-         print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
-         sys.exit()
-      if sys.argv[2].lower() in ('y', 'yes', 't', 'true', '1'):
-         maintainOrderBasedOnOrderFile = True
-      elif sys.argv[2].lower() in ('n', 'no', 'f', 'false', '0'):
-         maintainOrderBasedOnOrderFile = False
-      else:
-         print(sys.argv[2] + " is not right")
-         print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
-         sys.exit()
-   else:
-      print("Usage: python posh_nursery.py <integerNumberOfSeconds> <Y/N>")
-   
+   timeToWait = 3600 # default wait time is 1 hr
    debug = False
    slowMode = False
+   maintainOrderBasedOnOrderFile = False
+   checkCaptcha = True
+   if totNumArgs >= 2:
+      goodFormat, checkCaptcha = checkBooleanInput(sys.argv[1].lower())
+      if not goodFormat:
+         print("1st parameter " + sys.argv[3] + " needs to be a boolean value Y|N for whether or not to check for captcha")
+         print("Usage: python posh_nursery.py {Y|N} {integerNumberOfSeconds} {Y|N}")
+         sys.exit()
+   if totNumArgs >= 3:
+      try:
+         timeToWait = int(sys.argv[2])
+      except ValueError as e:
+         print("2nd parameter needs to be an integer number for the number of seconds to wait after one round of sharing")
+         print("Usage: python posh_nursery.py {Y|N} {integerNumberOfSeconds} {Y|N}")
+         sys.exit()
+   if totNumArgs >= 4:
+      goodFormat, maintainOrderBasedOnOrderFile = checkBooleanInput(sys.argv[3].lower())
+      if not goodFormat:
+         print("3rd parameter " + sys.argv[3] + " needs to be a boolean value Y|N for whether or not to maintain closet order based on order file")
+         print("Usage: python posh_nursery.py {Y|N} {integerNumberOfSeconds} {Y|N}")
+         sys.exit()
+   if totNumArgs >= 5:
+      print("Too many parameters. This program only takes 3 optional parameters")
+      print("Usage: python posh_nursery.py {Y|N} {integerNumberOfSeconds} {Y|N}")
+      sys.exit()
+   
    username = config.username
    password = config.password
    while(1):
-      posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, debug)
+      posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, checkCaptcha, debug)
       print("Logging in Poshmark as " + username + "...")
       posh_nursery.login()
       posh_nursery.shareMyCloset()
