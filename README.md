@@ -51,6 +51,3 @@ python posh_nursery.py Y 1800 Y
 * If you continously see the message "Timed out while waiting for share modal to disappear..clicking second share again" on the stdout, that might mean you've hit a sharing threshold Poshmark set, which could prohibit you from sharing for a number of hours. Consider sharing less frequently in this case.  
 * chromedriver needs to be updated with the update of Chrome.
 * Poshmark UI updates sometimes requires the pathes in "posh_nursery.py" to be updated accordingly.
-```
-python posh_nursery.py {Y|N} {integerNumberOfSeconds} {Y|N}
-```
