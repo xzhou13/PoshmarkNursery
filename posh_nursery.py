@@ -25,24 +25,19 @@ class Posh_Nursery:
       self.itemNames = []
       self.loginUrl = "https://poshmark.com/login"
       self.closetUrl = "https://poshmark.com/closet"
+      self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
+      self.statsXPath = "//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
       self.loginXPath = "//input[@name='userHandle']"
       self.passwordID = "login_form_password"
       self.passwordXPath = "//input[@name='password']"
-      #self.socialBarXPath = "social-action-bar tile__social-actions"
-      self.socialBarXPath = "//div[@class='social-info social-actions d-fl ai-c jc-c']"
-      #self.socialXPath = "//*[@class='d--fl ai--c social-action-bar__action social-action-bar__share']"
-      self.socialXPath = "//*[@class='share']"
-      #self.itemNameXPath = "//*[@class='tile__title tc--b']"
-      self.itemNameXPath = "//*[@class='title']"
-      #self.cssShareClass = "div.share-wrapper__icon-container"
-      self.cssShareClass = "div.icon-con"
-      self.shareXPath = "//i[@class='icon pm-logo-white']"
-      #self.modalTitleXPath = "//h5[@class='modal__title']"
-      self.captchaModalTitleXPath = "//*[@id='captcha-popup']/div[1]/h5"
-      self.shareModalTitleXPath = "//*[@id='share-popup']/div[1]/h5"
-      #self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
-      self.captchaXButtonXPath = "//*[@id='captcha-popup']/div[1]/button"
+      self.firstShareXPath = "//i[@class='icon share-gray-large']"
+      self.socialBarXPath = "//*[@class='social-action-bar tile__social-actions']"
+      self.itemNameXPath = "//*[@class='tile__title tc--b']"
+      self.secondShareXPath = "//i[@class='icon pm-logo-white']"
+      self.shareModalTitleXPath = "//h5[@class='modal__title']"
+      self.captchaModalTitleXPath = "//h5[@class='modal__title']"
+      self.captchaXButtonXPath = "//button[@class='btn btn--close modal__close-btn simple-modal-close']"
       if maintainOrder: 
          self.orderTextFile = "order.txt"
       else:
@@ -158,9 +153,6 @@ class Posh_Nursery:
       self.closetOrder = [line.rstrip('\n') for line in open(self.orderTextFile)]
       for n,sortedItem in enumerate(self.closetOrder):
          self.closetOrderDict[sortedItem] = n
-      if self.debug:
-         print("Initial closetOrderDict")
-         print(self.closetOrderDict)
 
    def checkItemInOrderTextFile(self, item):
       if item in self.closetOrderDict.keys():
@@ -215,9 +207,6 @@ class Posh_Nursery:
          print(self.closetOrderDict)
       self.orderedShareButtons = [None] * self.closetSize
       for itemName, item in zip(self.itemNames, self.shareButtons):
-         if self.debug:
-            print(itemName)
-            print(self.closetOrderDict[itemName])
          self.orderedShareButtons[self.closetOrderDict[itemName]] = item
       count = 0
       for button in self.orderedShareButtons:
@@ -239,7 +228,7 @@ class Posh_Nursery:
       self.getAndPrintItemNames()
    
    def getShareButtons(self):      
-      self.shareButtons = self.driver.find_elements_by_xpath(self.socialXPath)      
+      self.shareButtons = self.driver.find_elements_by_xpath(self.firstShareXPath)      
       self.closetSize = len(self.shareButtons)
   
    def clickAButton(self, button):
@@ -247,7 +236,6 @@ class Posh_Nursery:
          self.driver.execute_script("arguments[0].click();", button)
       except Exception as e:
          print("clicking button failed: " + str(e))
-         #pdb.set_trace()
    
    def waitTillModalPopsUp(self, xpath):
       modalPopsUp = False
@@ -259,7 +247,6 @@ class Posh_Nursery:
       if self.debug:
          print("      Clicked 1st share")
       self.waitTillModalPopsUp(self.shareModalTitleXPath)
-      self.waitTillClickable("xpath", self.shareXPath)
       if self.slowMode:
          time.sleep(self.getRandomSec())
    
@@ -282,7 +269,7 @@ class Posh_Nursery:
    def retrySharingAnItem(self, firstShareButton):
       self.closeCaptchaPopUp()
       self.clickFirstShareButton(firstShareButton)
-      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
+      shareToFollowers = self.waitTillClickable("xpath", self.secondShareXPath)
       shared = False
       while not shared:
          self.clickAButton(shareToFollowers)
@@ -318,7 +305,7 @@ class Posh_Nursery:
          self.checkAndWaitForCaptchaSolve(firstShareButton)
 
    def clickSecondShareButton(self, firstShareButton):
-      shareToFollowers = self.waitTillClickable("xpath", self.shareXPath)
+      shareToFollowers = self.waitTillClickable("xpath", self.secondShareXPath)
       if not shareToFollowers:
          print("time out exception occured clicking second share button")
          pdb.set_trace()
@@ -357,12 +344,42 @@ class Posh_Nursery:
       else:
          print("No ordered text given, sharing in current closet order...")
          self.shareCloset(self.itemNames, self.shareButtons)
-   
+
+   def getClosetSizeFromStatsPage(self):
+      self.driver.get(self.closetStatsUrl)
+      availableStats = None
+      while not availableStats:
+         availableStats = self.waitForAnElementByXPath(self.statsXPath, "available stats").text
+      if self.debug:
+         print("Available items from stats = " + str(availableStats))
+      return int(availableStats)
+
    def shareMyCloset(self):
+      closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
       self.driver.get(self.availableUrl)
-      self.scrollCloset()
-      self.getShareButtons()
-      print("Available items in the closet: {}".format(self.closetSize))
+      scroll = True
+      numTimesToScroll = 4
+      count = 0
+      while scroll:
+         self.scrollCloset()
+         self.getShareButtons()
+         print("Available items in the closet: {}".format(self.closetSize))
+         if closetSizeFromStatsPage <= self.closetSize:
+            scroll = False
+         else:
+            if count >= numTimesToScroll:
+               closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
+               if closetSizeFromStatsPage <= self.closetSize:
+                  print("Closet size matches now")
+                  scroll = False
+               else:
+                  print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scrolling from begining...")
+                  self.driver.get(self.availableUrl)
+                  scroll = True
+            else:
+               print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
+               scroll = True
+         count += 1
       self.getItemNames()
       if self.orderTextFile:
          print("Keeping closet order based on " + self.orderTextFile)
