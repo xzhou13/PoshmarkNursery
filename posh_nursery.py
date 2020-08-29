@@ -26,7 +26,7 @@ class Posh_Nursery:
       self.loginUrl = "https://poshmark.com/login"
       self.closetUrl = "https://poshmark.com/closet"
       self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
-      self.statsXPath = "//div[@class='stat-count']"
+      self.statsXPath = "//div[contains(text(), 'Listings Analysis')]//parent::div//div[@class='stat-count']"
       self.loginID = "login_form_username_email"
       self.loginXPath = "//input[@name='userHandle']"
       self.passwordID = "login_form_password"
@@ -397,7 +397,7 @@ def checkBooleanInput(val):
 if __name__ == "__main__":
    totNumArgs = len(sys.argv)
    timeToWait = 3600 # default wait time is 1 hr
-   debug = False
+   debug = True
    slowMode = False
    maintainOrderBasedOnOrderFile = False
    checkCaptcha = True
