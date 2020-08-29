@@ -397,7 +397,7 @@ def checkBooleanInput(val):
 if __name__ == "__main__":
    totNumArgs = len(sys.argv)
    timeToWait = 3600 # default wait time is 1 hr
-   debug = True
+   debug = False
    slowMode = False
    maintainOrderBasedOnOrderFile = False
    checkCaptcha = True
