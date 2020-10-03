@@ -10,7 +10,7 @@ import sys, random, pdb, time
 import config
    
 class Posh_Nursery:
-   def __init__(self, username, password, slowMode = False, maintainOrder = False, checkCaptcha = True, debug = False):
+   def __init__(self, username, password, slowMode = False, maintainOrder = False, checkCaptcha = True, debug = False, timeToWait = 3600):
       self.username = username
       self.password = password
       self.timeOutSecs = 20
@@ -18,11 +18,6 @@ class Posh_Nursery:
       #self.chrome_options.add_argument("--headless")
       #self.chrome_options.add_argument("--window-size=1920x1080")
       self.driver = webdriver.Chrome(options = self.chrome_options)
-      self.shareButtons = []
-      self.orderedShareButtons = []
-      self.closetSize = 0
-      self.itemNameElements = []
-      self.itemNames = []
       self.loginUrl = "https://poshmark.com/login"
       self.closetUrl = "https://poshmark.com/closet"
       self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
@@ -32,8 +27,8 @@ class Posh_Nursery:
       self.passwordID = "login_form_password"
       self.passwordXPath = "//input[@name='password']"
       self.firstShareXPath = "//i[@class='icon share-gray-large']"
-      self.socialBarXPath = "//*[@class='social-action-bar tile__social-actions']"
-      self.itemNameXPath = "//*[@class='tile__title tc--b']"
+      self.socialBarXPath = "//div[@class='social-action-bar tile__social-actions']"
+      self.itemNameXPath = "//a[@class='tile__title tc--b']"
       self.secondShareXPath = "//i[@class='icon pm-logo-white']"
       self.shareModalTitleXPath = "//h5[@class='modal__title']"
       self.captchaModalTitleXPath = "//h5[@class='modal__title']"
@@ -42,15 +37,31 @@ class Posh_Nursery:
          self.orderTextFile = "order.txt"
       else:
          self.orderTextFile = ""
+      self.availableUrl = self.getClosetAvailableUrl(self.username)
       self.hasUpdate = False
+      self.closetSize = 0
+      self.shareButtons = []
+      self.orderedShareButtons = []
+      self.itemNameElements = []
+      self.itemNames = []
       self.closetOrder = []
       self.closetOrderDict = {}
       self.checkCaptcha = checkCaptcha
       self.debug = debug
       self.slowMode = slowMode
-      self.availableUrl = self.getClosetAvailableUrl(self.username)
+      self.timeToWait = timeToWait
       self.driver.minimize_window()
    
+   def clearsAndResets(self):
+      self.hasUpdate = False
+      self.closetSize = 0
+      self.shareButtons = []
+      self.orderedShareButtons = []
+      self.itemNameElements = []
+      self.itemNames = []
+      self.closetOrder = []
+      self.closetOrderDict = {}
+ 
    def quit(self):   
       self.driver.quit()
    
@@ -148,7 +159,11 @@ class Posh_Nursery:
          if newHeight == lastHeight:
             scrollMore = False
          lastHeight = newHeight
-         
+   
+   def scrollToTop(self):
+      self.driver.switch_to.window(self.driver.current_window_handle)
+      self.driver.execute_script("window.scrollTo(0, 0);")
+  
    def readInClosetOrder(self):
       self.closetOrder = [line.rstrip('\n') for line in open(self.orderTextFile)]
       for n,sortedItem in enumerate(self.closetOrder):
@@ -355,36 +370,41 @@ class Posh_Nursery:
       return int(availableStats)
 
    def shareMyCloset(self):
-      closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
-      self.driver.get(self.availableUrl)
-      scroll = True
-      numTimesToScroll = 4
-      count = 0
-      while scroll:
-         self.scrollCloset()
-         self.getShareButtons()
-         print("Available items in the closet: {}".format(self.closetSize))
-         if closetSizeFromStatsPage <= self.closetSize:
-            scroll = False
-         else:
-            if count >= numTimesToScroll:
-               closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
-               if closetSizeFromStatsPage <= self.closetSize:
-                  print("Closet size matches now")
-                  scroll = False
-               else:
-                  print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scrolling from begining...")
-                  self.driver.get(self.availableUrl)
-                  scroll = True
+      while(1):
+         closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
+         self.driver.get(self.availableUrl)
+         scroll = True
+         numTimesToScroll = 4
+         count = 0
+         while scroll:
+            self.scrollCloset()
+            self.getShareButtons()
+            print("Available items in the closet: {}".format(self.closetSize))
+            if closetSizeFromStatsPage <= self.closetSize:
+               scroll = False
             else:
-               print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
-               scroll = True
-         count += 1
-      self.getItemNames()
-      if self.orderTextFile:
-         print("Keeping closet order based on " + self.orderTextFile)
-         self.arrangeClosetItemsForSharing()
-      self.shareAllItems()
+               if count >= numTimesToScroll:
+                  closetSizeFromStatsPage = self.getClosetSizeFromStatsPage()
+                  if closetSizeFromStatsPage <= self.closetSize:
+                     print("Closet size matches now")
+                     scroll = False
+                  else:
+                     print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scrolling from begining...")
+                     self.driver.get(self.availableUrl)
+                     scroll = True
+               else:
+                  print("Closet size doesn't match on stats page of " + str(closetSizeFromStatsPage) + ". Scroll more...")
+                  scroll = True
+            count += 1
+         self.scrollToTop()  
+         self.getItemNames()
+         if self.orderTextFile:
+            print("Keeping closet order based on " + self.orderTextFile)
+            self.arrangeClosetItemsForSharing() 
+         self.shareAllItems()
+         self.clearsAndResets()
+         print("Shared closet, will share again in " + str(timeToWait/60) + " mins at " + str(datetime.now() + timedelta(seconds=timeToWait))) 
+         time.sleep(self.timeToWait)
 
 def checkBooleanInput(val):
    if val in ('y', 'yes', 't', 'true', '1'):
@@ -427,11 +447,8 @@ if __name__ == "__main__":
    
    username = config.username
    password = config.password
-   while(1):
-      posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, checkCaptcha, debug)
-      print("Logging in Poshmark as " + username + "...")
-      posh_nursery.login()
-      posh_nursery.shareMyCloset()
-      posh_nursery.quit()   
-      print("Shared closet, will share again in " + str(timeToWait/60) + " mins at " + str(datetime.now() + timedelta(seconds=timeToWait))) 
-      time.sleep(timeToWait)
+   posh_nursery = Posh_Nursery(username, password, slowMode, maintainOrderBasedOnOrderFile, checkCaptcha, debug, timeToWait)
+   print("Logging in Poshmark as " + username + "...")
+   posh_nursery.login()
+   posh_nursery.shareMyCloset()
+   posh_nursery.quit()   
