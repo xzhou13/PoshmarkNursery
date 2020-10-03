@@ -53,6 +53,7 @@ python posh_nursery.py Y 1800 Y
 <p align="center">
   <img src="demo-image-01.gif">
 </p>
+
 4. Consider sharing in "headless" mode. Uncomment these 2 lines in the "posh_nursery.py" file by removing the # in front of the 2 lines:
 ```
 self.chrome_options.add_argument("--headless")
