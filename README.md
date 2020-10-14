@@ -63,9 +63,7 @@ For example, to self-share every 30 min while checking for captcha and keeping o
 python posh_nursery.py Y N 1800 Y
 ```
 
-5. 'Y' or 'N' to share back after each round of self-share. Default is 'N'. In this mode, it will scroll your poshmark.com/news/share page 5 times, share 8 items from the closets that shared your items. It will also keep track of all the closets you shared and won't share the same closet again.
-
-For example, to self-share and share back and follow other closets every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
+5. 'Y' or 'N' to share back after each round of self-share. Default is 'N'. In this mode, it will scroll your poshmark.com/news/share page 5 times, share 8 items from the closets that shared your items. It will also keep track of all the closets you shared and won't share the same closet again. For example, to self-share and share back and follow other closets every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
 ```
 python posh_nursery.py Y N 1800 Y Y
 ```
