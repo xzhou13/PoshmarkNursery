@@ -24,7 +24,7 @@ password = "password"
 # To Run In Default Mode
 Run in terminal with the following options:
 
-Default mode (checks for captcha, waits one hour after sharing completes to share again, and shares in the same order as current closet):
+Default mode (self-share once every 60 min while checking for captcha, sharing in the same order as current closet, and not sharing back or following closets that shared your item):
 ```
 python posh_nursery.py
 ```
