@@ -41,23 +41,27 @@ To make it not check for captcha:
 python posh_nursery.py N
 ```
 
-2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. An example is below:
+2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. An example "closetsToShare.txt" is below:
 ```
 closet_name_1
 closet_name_2
 ```
-Note when you select 'Y', the program will only share closets in "closetsToShare.txt" and end. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking captcha mode if you're sharing large closets.
 
 3. Number of seconds to wait before sharing again. 
 
 4. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file.
 
-For example, to share every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
+For example, to self-share every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
 ```
-python posh_nursery.py Y 1800 Y
+python posh_nursery.py Y N 1800 Y
 ```
 
 5. 'Y' or 'N' to share back after each round of self-share. In this mode, it will scroll your poshmark.com/news/share page 5 times, share 8 items from the closets that shared your items. It will also keep track of all the closets you shared and won't share the same closet again.
+
+For example, to self-share and share back and follow other closets every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
+```
+python posh_nursery.py Y N 1800 Y Y
+```
 
 <p align="center">
   <img src="demo-image-01.gif">
