@@ -35,28 +35,35 @@ Five optional command line arguments:
 python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}
 ```
 
-1. 'Y' or 'N' for checking for captcha while sharing. The default value is 'Y' for checking captcha. The 'N' option, or NOT checking for captcha while sharing is useful when for you are not available to monitor script closely, solve captcha and manually tell the script to go on. Read about captcha [Maintenance](#Maintenance) below. When the script is not checking for captcha, it will get caught by captcha, keep sharing but sharing will be unsuccessful. You can catch this by checking on your closet at your convinence, see the sharing time of the top item. If it looks longer than the wait time you gave, it is likely caught by captcha. You can get it out of the mode by opening a browser and logging in to your closet, then sharing an item and solving a captcha or two. After this, the script should proceed sharing successfully. Note this will likely mess up the order of the closet. I recommend preserving the a particular order using "order.txt" file (read more about the 3rd optional parameter). 
+1. 'Y' or 'N' for checking for captcha while sharing. The default value is 'Y' for checking captcha. The 'N' option, or NOT checking for captcha while sharing is useful when for you are not available to monitor script closely, solve captcha and manually tell the script to go on. Read about captcha [Maintenance](#Maintenance) below. When the script is not checking for captcha, it will get caught by captcha, keep sharing but sharing will be unsuccessful. You can catch this by checking on your closet at your convinence, see the sharing time of the top item. If it looks longer than the wait time you gave, it is likely caught by captcha. You can get it out of the mode by opening a browser and logging in to your closet, then sharing an item and solving a captcha or two. After this, the script should proceed sharing successfully. Note this will likely mess up the order of the closet. I recommend preserving the a particular order using "order.txt" file (read more about the 4th optional parameter). 
 To make it not check for captcha:
 ```
 python posh_nursery.py N
 ```
 
-2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. An example "closetsToShare.txt" is below:
+2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Default is 'N'. Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. An example "closetsToShare.txt" is the following if the two closets I want to share are "closet_name_1" and "closet_name_2":
 ```
 closet_name_1
 closet_name_2
 ```
+For example, to share other closets in "closetsToShare.txt" while checking for captcha:
+```
+python posh_nursery.py Y Y
+```
 
-3. Number of seconds to wait before sharing again. 
+3. Number of seconds to wait before sharing again. Default is set to an hour if you don't specify. For example, to self-share every 30 min while not checking for captcha:
+```
+python posh_nursery.py N N 1800
+```
 
-4. 'Y' or 'N' for preserving the order based on text file "order.txt". If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file.
+4. 'Y' or 'N' for preserving the order based on text file "order.txt". Default is 'N'. If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file.
 
 For example, to self-share every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
 ```
 python posh_nursery.py Y N 1800 Y
 ```
 
-5. 'Y' or 'N' to share back after each round of self-share. In this mode, it will scroll your poshmark.com/news/share page 5 times, share 8 items from the closets that shared your items. It will also keep track of all the closets you shared and won't share the same closet again.
+5. 'Y' or 'N' to share back after each round of self-share. Default is 'N'. In this mode, it will scroll your poshmark.com/news/share page 5 times, share 8 items from the closets that shared your items. It will also keep track of all the closets you shared and won't share the same closet again.
 
 For example, to self-share and share back and follow other closets every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
 ```
