@@ -41,14 +41,14 @@ To make it not check for captcha:
 python posh_nursery.py N
 ```
 
-2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Default is 'N'. Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. An example "closetsToShare.txt" is the following if the two closets I want to share are "closet_name_1" and "closet_name_2":
+2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Default is 'N'. Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. For example, to share other closets in "closetsToShare.txt" while checking for captcha, run:
+```
+python posh_nursery.py Y Y
+```
+An example "closetsToShare.txt" is the following if the two closets I want to share are "closet_name_1" and "closet_name_2":
 ```
 closet_name_1
 closet_name_2
-```
-For example, to share other closets in "closetsToShare.txt" while checking for captcha:
-```
-python posh_nursery.py Y Y
 ```
 
 3. Number of seconds to wait before sharing again. Default is set to an hour if you don't specify. For example, to self-share every 30 min while not checking for captcha:
@@ -70,7 +70,7 @@ python posh_nursery.py Y N 1800 Y Y
   <img src="demo-image-01.gif">
 </p>
 
-6. Tip: Consider sharing in "headless" mode. This will eliminate the selenium driven chrome window from popping up. Uncomment these 2 lines in the "posh_nursery.py" file by removing the # in front of the 2 lines:
+Tip: Consider sharing in "headless" mode. This will eliminate the selenium driven chrome window from popping up. Uncomment these 2 lines in the "posh_nursery.py" file by removing the # in front of the 2 lines:
 ```
 self.chrome_options.add_argument("--headless")
 self.chrome_options.add_argument("--window-size=1920x1080")
