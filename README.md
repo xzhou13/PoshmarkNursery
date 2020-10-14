@@ -56,9 +56,7 @@ python posh_nursery.py Y Y
 python posh_nursery.py N N 1800
 ```
 
-4. 'Y' or 'N' for preserving the order based on text file "order.txt". Default is 'N'. If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file.
-
-For example, to self-share every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
+4. 'Y' or 'N' for preserving the order based on text file "order.txt". Default is 'N'. If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file. For example, to self-share every 30 min while checking for captcha and keeping order of items based on "order.txt" file:
 ```
 python posh_nursery.py Y N 1800 Y
 ```
