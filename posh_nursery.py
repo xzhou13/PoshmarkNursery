@@ -25,7 +25,7 @@ class Posh_Nursery:
       self.closetUrl = "https://poshmark.com/closet"
       self.shareNewsUrl = "https://poshmark.com/news/share"
       self.closetStatsUrl = "https://poshmark.com/users/self/closet_stats"
-      self.statsXPath = "//div[contains(text(), 'Listings Analysis')]//parent::div//div[@class='stat-count']"
+      self.statsXPath = "((//div[@class='stats-container__border stats__content'])[1]//h1[@class='posh-stats__value'])[1]"
       self.loginID = "login_form_username_email"
       self.loginXPath = "//input[@name='userHandle']"
       self.passwordID = "login_form_password"
