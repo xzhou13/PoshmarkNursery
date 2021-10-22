@@ -81,3 +81,4 @@ self.chrome_options.add_argument("--window-size=1920x1080")
 * If you continously see the message "Timed out while waiting for share modal to disappear..clicking second share again" on the stdout, that might mean you've hit a sharing threshold Poshmark set, which could prohibit you from sharing for a number of hours. Consider sharing less frequently in this case. I've only hit this limit when I shared with this script non-stop for a few hours. 
 * chromedriver needs to be updated with the update of Chrome.
 * Poshmark UI updates sometimes requires the pathes in "posh_nursery.py" to be updated accordingly.
+* If you observe the script not being able to obtain same number of available items as that on the stats page, it's most likely having difficulty scrolling down to the very buttom of the page, consider incremeting the "srollWaitTime" variable. This should increase the wait time after each scroll.
