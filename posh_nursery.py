@@ -15,7 +15,7 @@ class Posh_Nursery:
       self.password = password
       self.numItemsToShareFromOtherClosets = 8
       self.timeOutSecs = 10
-      self.scrollWaitTime = 2
+      self.scrollWaitTime = 5
       self.numTimesToScroll = 5
       self.chrome_options = Options()
       #self.chrome_options.add_argument("--headless")
