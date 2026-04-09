@@ -60,7 +60,8 @@ python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}
    ⚠️ **Note:** This feature is **not actively maintained** and may not work with the latest Poshmark UI. Use at your own risk. When `Y`, the program shares only those closets (once) and then exits.
 
 4. **`{Y|N}`** – Preserve closet order using `order.txt`. Default `Y`.  
-   Items are shared in the order listed in `order.txt`. New items are added to the top; sold/removed items are deleted from the file.
+   Items are shared in the order listed in `order.txt`. New items are added to the top; sold/removed items are deleted from the file.  
+   ⚠️ **Important:** This feature requires that all available items have **unique names**. If you have duplicate item titles (e.g., two identical listings with the same name), the script cannot tell them apart and the ordering will fail. Consider editing your listing titles to make them distinct if you use this feature.
 
 <p align="center">
   <img src="demo-image-01.gif">
