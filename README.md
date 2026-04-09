@@ -2,7 +2,9 @@
 PoshmarkNursery is a bot that shares available items from one's own Poshmark closet to his/her followers on a schedule. It can also be configured to share back items from people who shared your items or share items from a given list of closets. <a href="https://www.poshmark.com">Poshmark</a> is an online reselling platform, and sharing one's own items helps to promote sales.
 
 # Motivation
-I started reselling some of my clothes on Poshmark in the summer of 2019 and have caught the reselling/downsizing bug. To promote sales, I quickly learned that sharing my own items on a regular basis was a good practice. The act of sharing is very tedious so I wrote this script for sharing. I've since added the option to share other poshers' closets if they share from mine, although I suspect it doesn't enhance sales as much as sharing your own does (I tried it for a few weeks and stopped since it didn't seem to increase likes or sales).
+I started reselling some of my clothes on Poshmark in the summer of 2019 and quickly learned that regularly sharing my own items is essential for sales. The act of sharing is tedious, so I wrote this script to automate it.
+
+Over time, I experimented with sharing back and sharing other users' closets. I found that these actions did not meaningfully increase likes or sales. In one case, I was even blocked by a seller for sharing her closet too frequently. As a result, I have not used those features in several years. **They are included for completeness but are not actively maintained and may not work with the current Poshmark UI.** For best results, use the script to share your own closet only.
 
 # Prerequisites
 * Python 3.7.3+
@@ -30,37 +32,35 @@ Default mode (self-share once every 30 minutes while checking for captcha, prese
 python posh_nursery.py
 ```
 
+# Two‑Factor Authentication (2FA)
+
+Poshmark now requires 2FA for most accounts. The script automatically detects the verification prompt after login, asks for the code on the command line, and submits it for you. Simply enter the code sent to your phone and hit "Enter" via command line when prompted.
+
+Example output:
+```
+Logging in Poshmark as username...
+2FA verification required. Please enter the code sent to your phone.
+Enter verification code: 123456
+2FA code submitted.
+Logged into poshmark
+```
+
 # Advanced options
-Four optional command line arguments:
+Four optional command line arguments in this order:
 ```
-python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N}
-```
-
-1. 'Y' or 'N' for checking for captcha while sharing. The default value is 'Y' for checking captcha. The 'N' option, or NOT checking for captcha while sharing is useful when for you are not available to monitor script closely, solve captcha and manually tell the script to go on. Read about captcha [Maintenance](#Maintenance) below. When the script is not checking for captcha, it will get caught by captcha, keep sharing but sharing will be unsuccessful. You can catch this by checking on your closet at your convinence, see the sharing time of the top item. If it looks longer than the wait time you gave, it is likely caught by captcha. You can get it out of the mode by opening a browser and logging in to your closet, then sharing an item and solving a captcha or two. After this, the script should proceed sharing successfully. Note this will likely mess up the order of the closet. I recommend preserving the a particular order using "order.txt" file (read more about the 4th optional parameter). 
-To make it not check for captcha, run:
-```
-python posh_nursery.py N
+python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}
 ```
 
-2. 'Y' or 'N' for whether or not to share closets from the file "closetsToShare.txt". Default is 'N'. Note when you select 'Y', the program will only share closets in "closetsToShare.txt" before terminating. You can specify whether or not to check for captcha with the 1st parameter. It's recommended that you run it in checking for captcha mode if you're sharing large closets. Inside the "closetsToShare.txt" file, put the closet names you want to share and place each closet in a separate line. For example, to share other closets in "closetsToShare.txt" while checking for captcha, run:
-```
-python posh_nursery.py Y Y
-```
-An example "closetsToShare.txt" is the following if the two closets I want to share are "closet_name_1" and "closet_name_2":
-```
-closet_name_1
-closet_name_2
-```
+1. **`{integerNumberOfSeconds}`** – Number of seconds to wait between sharing cycles. Default `1800` (30 minutes).
 
-3. Number of seconds to wait before sharing again. Default is set to 30 min. Or to self-share every hour while not checking for captcha, run:
-```
-python posh_nursery.py N N 3600
-```
+2. **`{Y|N}`** – Check for captcha while sharing. Default `Y`.  
+   When `N`, the script will not pause for captcha solving; it may get stuck but will continue trying. Useful for unattended runs.
 
-4. 'Y' or 'N' for preserving the order based on text file "order.txt". Default is 'Y'. If the text file is empty, it will get the current order and preserve it. You can customize the item order by editing the text file. As a seller, I like to share my closet in a particular order to keep the more desirable items on top. An issue for this feature is that it must have unique names for all available items for sale. When items are no longer available for sale or new items are added, before the next round of sharing, the "order.txt" file will be updated by removing items no longer available and adding new items to the top of the "order.txt" file. For example, to self-share every 30 min while checking for captcha and keeping order of items based on "order.txt" file, run:
-```
-python posh_nursery.py Y N 1800 Y
-```
+3. **`{Y|N}`** – Share closets listed in `closetsToShare.txt`. Default `N`.  
+   ⚠️ **Note:** This feature is **not actively maintained** and may not work with the latest Poshmark UI. Use at your own risk. When `Y`, the program shares only those closets (once) and then exits.
+
+4. **`{Y|N}`** – Preserve closet order using `order.txt`. Default `Y`.  
+   Items are shared in the order listed in `order.txt`. New items are added to the top; sold/removed items are deleted from the file.
 
 <p align="center">
   <img src="demo-image-01.gif">
@@ -73,6 +73,6 @@ self.firefoxoptions.add_argument("-headless")
 
 # Maintenance
 * Captcha: This will get caught by captcha. In the default mode, when this happens, the script detects it, enters into the debugger mode, pauses sharing, and waits for the user to manually solve the captcha. After solving the captcha, type 'c' or 'continue' in the debugger to continue the sharing. I recommend logging into your Poshmark account on a web browser (not the selenium driven chromedriver window), and then share an item there. This will reduce the number of captchas you'll have to solve. If you attempt to solve the captcha in the selenium driven window, you'll be prompted to solve more captcha. If it gets caught in the log in screen, re-enter the password, check "I'm not a robot", solve the capcha in the chromedriver window. After you log in, type 'c' or 'continue' in the debugger to continue. In the case that it gets caught in the log in window, consider running the script less frequently. If you're going to be away from your computer, you can run it with checking for captcha turned off (1st optional parameter, read more about optional parameters [here](#Advanced-options)). 
-* If you continously see the message "Timed out while waiting for share modal to disappear..clicking second share again" on the stdout, that might mean you've hit a sharing threshold Poshmark set, which could prohibit you from sharing for a number of hours. Consider sharing less frequently in this case. I've only hit this limit when I shared with this script non-stop for a few hours. 
+* If you continuously see the message "Timed out while waiting for share modal to disappear..clicking second share again" on the stdout, that might mean you've hit a sharing threshold Poshmark set, which could prohibit you from sharing for a number of hours. Consider sharing less frequently in this case. I've only hit this limit when I shared with this script non-stop for a few hours. 
 * geckodriver: Update geckodriver when Firefox updates to a new major version.
 * UI updates: Poshmark occasionally changes its HTML/CSS. If the script stops finding share buttons or item names, you may need to update the XPaths in posh_nursery.py (look for firstShareXPath, itemNameXPath, etc.).

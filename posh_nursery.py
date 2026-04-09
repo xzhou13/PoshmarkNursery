@@ -17,7 +17,7 @@ class Posh_Nursery:
       self.password = password
       self.numItemsToShareFromOtherClosets = 8
       self.timeOutSecs = 10
-      self.scrollWaitTime = 5
+      self.scrollWaitTime = 2
       self.numTimesToScroll = 5
       self.firefoxoptions = FirefoxOptions()
       self.firefoxoptions.add_argument("-headless")
@@ -595,47 +595,56 @@ def checkBooleanInput(val):
 
 if __name__ == "__main__":
    totNumArgs = len(sys.argv)
-   timeToWait = 1800 # default wait time is half hour
-   debug = False
-   slowMode = False
-   maintainOrderBasedOnOrderFile = True
+   
+   # Default values
+   timeToWait = 1800 #seconds
    checkCaptcha = True
    toShareClosetsFromFile = False
-   shareBack = False # old feature used to share back, doesn't help promote sales, don't recommend using
+   maintainOrderBasedOnOrderFile = True
+   debug = False
+   slowMode = False
+   shareBack = False   # old feature, not exposed via CLI
+
+   # New order: seconds, checkCaptcha, toShareClosetsFromFile, maintainOrder
    if totNumArgs >= 2:
-      goodFormat, checkCaptcha = checkBooleanInput(sys.argv[1].lower())
-      if not goodFormat:
-         print("1st parameter " + sys.argv[1] + " needs to be a boolean value Y|N for whether or not to check for captcha")
-         print("Usage: python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}")
-         sys.exit()
-   if totNumArgs >= 3:
-      goodFormat, toShareClosetsFromFile = checkBooleanInput(sys.argv[2].lower())
-      if not goodFormat:
-         print("2nd parameter " + sys.argv[2] + " needs to be a boolean value Y|N for whether or not to share closets in closetsToShare.txt")
-         print("Usage: python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}")
-         sys.exit()
-   if totNumArgs >= 4:
       try:
-         timeToWait = int(sys.argv[3])
-      except ValueError as e:
-         print("3rd parameter " + sys.argv[3] +" needs to be an integer number for the number of seconds to wait after one round of sharing")
-         print("Usage: python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}")
+         timeToWait = int(sys.argv[1])
+      except ValueError:
+         print("1st parameter " + sys.argv[1] + " needs to be an integer number of seconds to wait after one round of sharing")
+         print("Usage: python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}")
          sys.exit()
+
+   if totNumArgs >= 3:
+      goodFormat, checkCaptcha = checkBooleanInput(sys.argv[2].lower())
+      if not goodFormat:
+         print("2nd parameter " + sys.argv[2] + " needs to be a boolean value Y|N for whether or not to check for captcha")
+         print("Usage: python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}")
+         sys.exit()
+
+   if totNumArgs >= 4:
+      goodFormat, toShareClosetsFromFile = checkBooleanInput(sys.argv[3].lower())
+      if not goodFormat:
+         print("3rd parameter " + sys.argv[3] + " needs to be a boolean value Y|N for whether or not to share closets in closetsToShare.txt")
+         print("Usage: python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}")
+         sys.exit()
+
    if totNumArgs >= 5:
       goodFormat, maintainOrderBasedOnOrderFile = checkBooleanInput(sys.argv[4].lower())
       if not goodFormat:
-         print("4th parameter " + sys.argv[4] + " needs to be a boolean value Y|N for whether or not to maintain closet order based on order file")
-         print("Usage: python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}")
+         print("4th parameter " + sys.argv[4] + " needs to be a boolean value Y|N for whether or not to maintain closet order based on order.txt")
+         print("Usage: python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}")
          sys.exit()
+
    if totNumArgs >= 6:
       print("Too many parameters. This program only takes 4 optional parameters")
-      print("Usage: python posh_nursery.py {Y|N} {Y|N} {integerNumberOfSeconds} {Y|N} {Y|N}")
+      print("Usage: python posh_nursery.py {integerNumberOfSeconds} {Y|N} {Y|N} {Y|N}")
       sys.exit()
-   
+
    username = config.username
    password = config.password
-   posh_nursery = Posh_Nursery(username, password, timeToWait, slowMode, debug, checkCaptcha, toShareClosetsFromFile, maintainOrderBasedOnOrderFile, shareBack)
+   posh_nursery = Posh_Nursery(username, password, timeToWait, slowMode, debug, checkCaptcha,
+                              toShareClosetsFromFile, maintainOrderBasedOnOrderFile, shareBack)
    print("Logging in Poshmark as " + username + "...")
    posh_nursery.login()
    posh_nursery.share()
-   posh_nursery.quit()   
+   posh_nursery.quit()
