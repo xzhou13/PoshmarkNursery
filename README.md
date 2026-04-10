@@ -73,7 +73,14 @@ self.firefoxoptions.add_argument("-headless")
 ```
 
 # Maintenance
-* Captcha: This will get caught by captcha. In the default mode, when this happens, the script detects it, enters into the debugger mode, pauses sharing, and waits for the user to manually solve the captcha. After solving the captcha, type 'c' or 'continue' in the debugger to continue the sharing. I recommend logging into your Poshmark account on a web browser (not the selenium driven chromedriver window), and then share an item there. This will reduce the number of captchas you'll have to solve. If you attempt to solve the captcha in the selenium driven window, you'll be prompted to solve more captcha. If it gets caught in the log in screen, re-enter the password, check "I'm not a robot", solve the capcha in the chromedriver window. After you log in, type 'c' or 'continue' in the debugger to continue. In the case that it gets caught in the log in window, consider running the script less frequently. If you're going to be away from your computer, you can run it with checking for captcha turned off (1st optional parameter, read more about optional parameters [here](#Advanced-options)). 
+* Captcha: This will get caught by captcha. In the default mode, when this happens, the script detects it, enters into the debugger mode, pauses sharing, and waits for the user to manually solve the captcha. After solving the captcha, type 'c' or 'continue' in the debugger to continue the sharing.
+```
+      Captcha detected, please solve
+> /Users/username/Projects/posh_nursery/posh_nursery.py(400)checkAndWaitForCaptchaSolve()
+-> self.driver.minimize_window()
+(Pdb) c
+```
+I recommend logging into your Poshmark account on a new web browser (not the selenium driven chromedriver window), and then share an item there. This will reduce the number of captchas you'll have to solve. If you're going to be away from your computer, you can run it with checking for captcha turned off (1st optional parameter, read more about optional parameters [here](#Advanced-options)), and remotely check in occasionally to solve for captchas. 
 * If you continuously see the message "Timed out while waiting for share modal to disappear..clicking second share again" on the stdout, that might mean you've hit a sharing threshold Poshmark set, which could prohibit you from sharing for a number of hours. Consider sharing less frequently in this case. I've only hit this limit when I shared with this script non-stop for a few hours. 
 * geckodriver: Update geckodriver when Firefox updates to a new major version.
 * UI updates: Poshmark occasionally changes its HTML/CSS. If the script stops finding share buttons or item names, you may need to update the XPaths in posh_nursery.py (look for firstShareXPath, itemNameXPath, etc.).
